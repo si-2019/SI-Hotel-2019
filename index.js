@@ -25,9 +25,6 @@ require('./requests/rijadReqs.js')(app, con)
 
 
 
-con.query('select * from Anketa', (err, res) => {
-    console.log(err, res[0])
-})
 
 
 module.exports = app

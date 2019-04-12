@@ -9,6 +9,9 @@ module.exports = function(app, con) {
       res.send('nesto bzvz')
     })
     
-    
+    con.query('select * from Anketa', (err, res) => {
+      console.log(err, res[0].naziv)
+  })
+  
 
 }
