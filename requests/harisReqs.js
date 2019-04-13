@@ -10,8 +10,6 @@ module.exports = function(app, con) {
     
 
     function insertSQL(table, obj) {
-      let cols = "", vals = ""
-      
       return `INSERT INTO ${table}(${Object.keys(obj).toString()}) VALUES (${Object.values(obj).toString()})`
     }
 
