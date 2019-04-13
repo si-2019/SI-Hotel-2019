@@ -16,13 +16,17 @@ module.exports = function(app, con) {
     app.post('/createAnketa', function(req, res) {
       const body = req.body
       let sql = insertSQL('Anketa', {
-        "napravioIme": "'ahmo'",
-        "datumIstekaAnkete": "DATE('2018-07-15')",
+        "napravioIme": `'${body.napravioIme}'`,
+        "datumIstekaAnkete": `DATE('${body.datumIstekaAnkete}')`,
         "datumKreiranja": "NOW()",
-        "tipAnkete": "'javna anketa'"
+        "tipAnkete": `'${body.tipAnkete}'`
       })
       console.log(sql)
       con.query(sql, (err, result) => {
+        if(err) {
+          res.json({message: err})
+          return;
+        }
         res.json({message: "OK"})
       })
     })
