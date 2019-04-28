@@ -20,6 +20,7 @@
   "dependencies": {
     "chai": "^4.2.0",
     "chai-http": "^4.2.1",
+    "cors": "^2.8.5",
     "express": "^4.16.4",
     "mysql": "^2.16.0",
     "mysql2": "^1.6.5",
