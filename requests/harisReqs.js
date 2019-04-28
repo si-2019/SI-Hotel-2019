@@ -20,10 +20,10 @@ module.exports = function(app, con) {
         "datumIstekaAnkete": `DATE('${body.datumIstekaAnkete}')`,
         "datumKreiranja": "NOW()",
         "tipAnkete": `'${body.tipAnkete}'`,
-        "idNapravio": `${body.idNapravio}`
+        "idNapravio": `${!body.idNapravio ? 'null' : body.idNapravio}`
       })
       console.log(sql)
-      con.query(sql, (err, result) => {
+      con.query(sql, (err, result) => { 
         if(err) {
           res.json({message: err})
           return;
