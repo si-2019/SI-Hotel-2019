@@ -1,10 +1,14 @@
+
 module.exports = function(app, con) {
-    /* ovdje se pišu zahtjevi npr.
-      app.get('/hotel', function(req, res) {
-        res.send('hotel - ankete')  
-      })
-    */
     
-
-
+  app.get('/getDatumKreiranjaAnkete', function(req, res) {
+    con.query('SELECT datumKreiranja FROM Anketa WHERE idAnketa = ' + req.query.idAnketa, function(error, result){
+      if (error)
+      {
+        res.json({message: error});
+        return;
+      }
+      res.json({datumKreiranja: result[0].datumKreiranja});
+  })
+})
 }
