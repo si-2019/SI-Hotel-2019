@@ -17,6 +17,9 @@ var bodyParser = require('body-parser');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
+var cors = require('cors')
+app.use(cors())
+
 require('./requests/aminaReqs.js')(app, con)
 require('./requests/hanaReqs.js')(app, con)
 require('./requests/harisReqs.js')(app, con)
