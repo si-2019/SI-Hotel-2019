@@ -19,15 +19,28 @@ module.exports = function(app, con) {
         "napravioIme": `'${body.napravioIme}'`,
         "datumIstekaAnkete": `DATE('${body.datumIstekaAnkete}')`,
         "datumKreiranja": "NOW()",
-        "tipAnkete": `'${body.tipAnkete}'`
+        "tipAnkete": `'${body.tipAnkete}'`,
+        "idNapravio": `${!body.idNapravio ? 'null' : body.idNapravio}`
       })
       console.log(sql)
-      con.query(sql, (err, result) => {
+      con.query(sql, (err, result) => { 
         if(err) {
           res.json({message: err})
           return;
         }
         res.json({message: "OK"})
+      })
+    })
+
+    app.get('/dajAnkete', (req, res) => {
+      let sql = "SELECT * from Anketa"
+      con.query(sql, (err, result) => {
+        if(err) {
+          res.json({message: err})
+        }
+        else {
+          res.json({ankete: result})
+        }
       })
     })
 
