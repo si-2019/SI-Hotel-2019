@@ -33,4 +33,32 @@ module.exports = function(app, con) {
   })
   })
 
+  app.get('/dajListuJavnihAnketa', function(req,res){
+
+    let sql='SELECT * FROM Anketa WHERE tipAnkete = "javna anketa"'
+
+    con.query(sql, function(error, result){
+      if (error)
+      {
+        res.json({message: error});
+        return;
+      }
+      res.json({ankete: result});
+  })
+  })
+
+  app.get('/dajPopunjeneAnketeZaPredmet',function(req,res){
+
+    let sql='SELECT naziv FROM Anketa WHERE tipAnkete = "anketa za predmet"'
+  
+      con.query(sql, function(error, result){
+        if (error)
+        {
+          res.json({message: error});
+          return;
+        }
+        res.json({ankete: result});
+    })
+    })
+
 }
