@@ -60,5 +60,4 @@ module.exports = function(app, con) {
         res.json({ankete: result});
     })
     })
-
 }
