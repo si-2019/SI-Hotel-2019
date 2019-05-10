@@ -39,5 +39,15 @@ app.get('/getPredmet', function(req, res) {
     })
   })
 })
+app.get('/getDatumIstekaAnkete', function(req, res) {
+  con.query('SELECT datumIstekaAnkete FROM Anketa WHERE idAnketa = ' + req.query.idAnketa, function(error, result){
+    if (error)
+    {
+      res.json({message: error});
+      return;
+    }
+    res.json({datumIstekaAnkete: result[0].datumIstekaAnkete});
+})
+}) 
 
 }
