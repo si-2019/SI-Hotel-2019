@@ -1,5 +1,5 @@
 
-module.exports = function(app, con) {
+module.exports = function(app, con, db) {
     
   app.get('/getDatumKreiranjaAnkete', function(req, res) {
     con.query('SELECT datumKreiranja FROM Anketa WHERE idAnketa = ' + req.query.idAnketa, function(error, result){

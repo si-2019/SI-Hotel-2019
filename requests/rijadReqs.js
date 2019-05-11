@@ -1,4 +1,4 @@
-module.exports = function(app, con) {
+module.exports = function(app, con, db) {
     
 
     app.get('/getKreator', function(req, res) {
