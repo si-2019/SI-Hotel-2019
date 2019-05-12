@@ -6,7 +6,8 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.INTEGER(10),
       allowNull: false,
       primaryKey: true,
-      field: 'idPonudjeniOdgovor'
+      field: 'idPonudjeniOdgovor',
+      autoIncrement: true
     },
     idPitanja: {
       type: DataTypes.INTEGER(10),
