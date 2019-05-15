@@ -61,7 +61,6 @@ module.exports = function(app, con, db) {
     })
     })
 
-    
     app.get('/dajAnketeZaProfesoraPoPredmetima', function(req, res) {
       let idProfesora = req.query.idProfesora
       if(!idProfesora) {
@@ -139,6 +138,55 @@ module.exports = function(app, con, db) {
       }).catch(error => {
         res.json({error})
       })
+    }).catch(error => {
+      res.json({error})
+    })
+})
+
+app.get('/dajSveAnketeZaKojePostojeRezultati', function(req, res) {
+  let idKorisnika = req.query.idUloga
+  if(!idKorisnika) {
+    res.json({message: "Nije poslan parametar idKorisnik"})
+    return
+ }
+ // let idKorisnika=3;
+  let datumTrenutni = new Date();
+
+  db.anketa.findAll().then(function(rez){
+    let istekaoRok = []
+
+         for(let i = 0; i < rez.length; i++) {
+           let pomocni=new Date(rez[i].datumIstekaAnkete);
+           if(datumTrenutni-pomocni>=0)
+           istekaoRok.push(rez[i].idAnketa)
+         }
+         if(idKorisnika==1){
+          db.anketa.findAll({
+            where:{
+              tipAnkete: 'javna anketa',
+              idAnketa: {in:[istekaoRok]}
+            }}).then(function(rezultat){
+              res.json(rezultat);
+            }).catch(error => {
+              res.json({error})
+            })
+            //fali jos ankete za predmete na koje je student upisan
+        }
+        else if(idKorisnika==2 || idKorisnika==3){
+          db.anketa.findAll({
+            where:{
+              tipAnkete: 'javna anketa',
+              idAnketa: {in:[istekaoRok]}
+            }}).then(function(rezultat){
+              res.json(rezultat);
+            }).catch(error => {
+              res.json({error})
+            })
+            //fale one ankete za cije predmete je on profesor
+        }
+        else if(idKorisnika==4){
+        res.json(istekaoRok);
+        }
     }).catch(error => {
       res.json({error})
     })
