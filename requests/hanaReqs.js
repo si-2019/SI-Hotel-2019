@@ -104,4 +104,44 @@ module.exports = function(app, con, db) {
          })
       })
   })
+
+  app.get('/dajSveAnketePoPredmetima', function(req, res) {
+    db.anketa.findAll({ 
+      where: {
+        tipAnkete: 'anketa za predmet'
+    }}).then(function(result) {
+      let predmeti = []
+         for(let i = 0; i < result.length; i++) {
+           predmeti.push(result[i].idPredmet)
+         }
+      db.predmet.findAll({
+        where: {
+          id: {in:[predmeti.toString()]}
+      }}).then(function(listaPredmeta){
+        let mapa = {}
+        for(let i = 0; i < listaPredmeta.length; i++) {
+          mapa[listaPredmeta[i].id] = listaPredmeta[i].naziv
+        }
+        let ankete = {}
+        for(let i = 0; i < result.length; i++) {
+          let id = result[i].idPredmet
+          if(ankete[id]) {
+            ankete[id].ankete.push(result[i])
+          }
+          else {
+            ankete[id] = {
+              nazivPredmeta: mapa[id],
+              ankete: [result[i]]
+            }
+          } 
+        }
+        res.json({ankete})
+      }).catch(error => {
+        res.json({error})
+      })
+    }).catch(error => {
+      res.json({error})
+    })
+    
+})
 }
