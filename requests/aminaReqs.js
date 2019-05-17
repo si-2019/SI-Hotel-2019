@@ -29,14 +29,16 @@ app.get('/getPredmet', function(req, res) {
       res.json({message: error});
       return;
     }
-    con.query('SELECT naziv FROM Predmet WHERE id = ' + result[0].idPredmet, function(error, result){
-      if (error)
-      {
-        res.json({message: error});
-        return;
-      }
-      res.json({nazivPredmeta: result[0].naziv});
-    })
+    else if(result[0].idPredmet!==null) {
+      con.query('SELECT naziv FROM Predmet WHERE id = ' + result[0].idPredmet, function(error, result){
+        if (error)
+        {
+          res.json({message: error});
+          return;
+        }
+        res.json({nazivPredmeta: result[0].naziv});
+      })
+    }
   })
 })
 app.get('/getDatumIstekaAnkete', function(req, res) {
