@@ -61,7 +61,6 @@ module.exports = function(app, con, db) {
     })
     })
 
-    
     app.get('/dajAnketeZaProfesoraPoPredmetima', function(req, res) {
       let idProfesora = req.query.idProfesora
       if(!idProfesora) {
@@ -104,4 +103,93 @@ module.exports = function(app, con, db) {
          })
       })
   })
+
+  app.get('/dajSveAnketePoPredmetima', function(req, res) {
+    db.anketa.findAll({ 
+      where: {
+        tipAnkete: 'anketa za predmet'
+    }}).then(function(result) {
+      let predmeti = []
+         for(let i = 0; i < result.length; i++) {
+           predmeti.push(result[i].idPredmet)
+         }
+      db.predmet.findAll({
+        where: {
+          id: {in:[predmeti.toString()]}
+      }}).then(function(listaPredmeta){
+        let mapa = {}
+        for(let i = 0; i < listaPredmeta.length; i++) {
+          mapa[listaPredmeta[i].id] = listaPredmeta[i].naziv
+        }
+        let ankete = {}
+        for(let i = 0; i < result.length; i++) {
+          let id = result[i].idPredmet
+          if(ankete[id]) {
+            ankete[id].ankete.push(result[i])
+          }
+          else {
+            ankete[id] = {
+              nazivPredmeta: mapa[id],
+              ankete: [result[i]]
+            }
+          } 
+        }
+        res.json({ankete})
+      }).catch(error => {
+        res.json({error})
+      })
+    }).catch(error => {
+      res.json({error})
+    })
+})
+
+app.get('/dajSveAnketeZaKojePostojeRezultati', function(req, res) {
+  let idKorisnika = req.query.idUloga
+  if(!idKorisnika) {
+    res.json({message: "Nije poslan parametar idKorisnik"})
+    return
+ }
+ // let idKorisnika=3;
+  let datumTrenutni = new Date();
+
+  db.anketa.findAll().then(function(rez){
+    let istekaoRok = []
+
+         for(let i = 0; i < rez.length; i++) {
+           let pomocni=new Date(rez[i].datumIstekaAnkete);
+           if(datumTrenutni-pomocni>=0)
+           istekaoRok.push(rez[i].idAnketa)
+         }
+         if(idKorisnika==1){
+          db.anketa.findAll({
+            where:{
+              tipAnkete: 'javna anketa',
+              idAnketa: {in:[istekaoRok]}
+            }}).then(function(rezultat){
+              res.json(rezultat);
+            }).catch(error => {
+              res.json({error})
+            })
+            //fali jos ankete za predmete na koje je student upisan
+        }
+        else if(idKorisnika==2 || idKorisnika==3){
+          db.anketa.findAll({
+            where:{
+              tipAnkete: 'javna anketa',
+              idAnketa: {in:[istekaoRok]}
+            }}).then(function(rezultat){
+              res.json(rezultat);
+            }).catch(error => {
+              res.json({error})
+            })
+            //fale one ankete za cije predmete je on profesor
+        }
+        else if(idKorisnika==4){
+        res.json(istekaoRok);
+        }
+    }).catch(error => {
+      res.json({error})
+    })
+    
+})
 }
