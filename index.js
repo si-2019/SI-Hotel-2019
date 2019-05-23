@@ -21,18 +21,43 @@ var cors = require('cors')
 app.use(cors())
 
 const db = require('./models/db')
+
+var connection = {
+    query: function(sql, callback) {
+        db.sequelize.query(sql).then(result => {
+            callback(null, result[0])
+        }).catch(error => {
+            callback(error, null)
+        })
+    }
+}
+
+require('./requests/aminaReqs.js')(app, connection, db)
+require('./requests/hanaReqs.js')(app, connection, db)
+require('./requests/harisReqs.js')(app, connection, db)
+require('./requests/nejiraReqs.js')(app, connection, db)
+require('./requests/rijadReqs.js')(app, connection, db)
 db.sequelize.sync().then(function(){
     console.log("Uspjesno povezano");
-    require('./requests/aminaReqs.js')(app, con, db)
-    require('./requests/hanaReqs.js')(app, con, db)
-    require('./requests/harisReqs.js')(app, con, db)
-    require('./requests/nejiraReqs.js')(app, con, db)
-    require('./requests/rijadReqs.js')(app, con, db)
 }).catch(function(err){
      console.log("Nije uspjesno povezano");
      console.log(err);
 });
 
+
+var proxy = require('http-proxy-middleware')
+appAPI = express()
+appAPI.use(
+    '/api',
+    proxy({
+        target: 'http://localhost:9123',
+        changeOrigin: true,
+        pathRewrite: {
+            '^/api/': '/', // rewrite path
+          },
+    })
+)
+appAPI.listen(31908)
 
 
 module.exports = app

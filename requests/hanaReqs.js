@@ -4,12 +4,11 @@ module.exports = function(app, con, db) {
         res.send('hotel - ankete')  
       })
     */
-   const Op = require('Sequelize').Op;
 
    app.post('/promijeniDatumIsteka', function(req, res) {
     const body = req.body
 
-    let sql = "UPDATE Anketa SET datumIstekaAnkete = " + body.datumIstekaAnkete + "WHERE naziv = " + body.naziv
+    let sql = "UPDATE Anketa SET datumIstekaAnkete = '" + body.datumIstekaAnkete + "' WHERE idAnketa = " + body.idAnketa
  
     con.query(sql, (err, result) => {
       if(err) {
@@ -22,7 +21,12 @@ module.exports = function(app, con, db) {
 
   app.get('/dajAnketeZaProfesora',function(req,res){
 
-  let sql='SELECT naziv FROM Anketa WHERE idNapravio = ALL (SELECT id FROM Korisnik WHERE idUloga = 3)'
+    if(!req.query.idProfesor) {
+      res.json({error: "Nije poslan parametar idProfesor"})
+      return
+    }
+
+  let sql='SELECT * FROM Anketa WHERE idNapravio = ' + req.query.idProfesor
 
     con.query(sql, function(error, result){
       if (error)
@@ -50,7 +54,7 @@ module.exports = function(app, con, db) {
 
   app.get('/dajPopunjeneAnketeZaPredmet',function(req,res){
 
-    let sql='SELECT * FROM Anketa WHERE tipAnkete = "anketa za predmet"'
+    let sql='SELECT PopunjenaAnketa.* FROM Anketa, PopunjenaAnketa WHERE Anketa.idAnketa = PopunjenaAnketa.idAnketa AND idPredmet = ' + req.query.idPredmet
   
       con.query(sql, function(error, result){
         if (error)
@@ -62,7 +66,7 @@ module.exports = function(app, con, db) {
     })
     })
 
-  app.get('/dajAnketeZaProfesoraPoPredmetima', function(req, res) {
+    app.get('/dajAnketeZaProfesoraPoPredmetima', function(req, res) {
       let idProfesora = req.query.idProfesora
       if(!idProfesora) {
          res.json({message: "Nije poslan parametar idProfesora"})
@@ -74,7 +78,7 @@ module.exports = function(app, con, db) {
            res.json({message: error})
            return
          }
-         let predmeti = []
+         let predmeti = [0]
          for(let i = 0; i < result.length; i++) {
            predmeti.push(result[i].idPredmet)
          }
@@ -105,18 +109,18 @@ module.exports = function(app, con, db) {
       })
   })
 
-app.get('/dajSveAnketePoPredmetima', function(req, res) {
+  app.get('/dajSveAnketePoPredmetima', function(req, res) {
     db.anketa.findAll({ 
       where: {
         tipAnkete: 'anketa za predmet'
     }}).then(function(result) {
-      let predmeti = []
+      let predmeti = [0]
          for(let i = 0; i < result.length; i++) {
            predmeti.push(result[i].idPredmet)
          }
       db.predmet.findAll({
         where: {
-          id: {in:[predmeti.toString()]}
+          id: {[db.Sequelize.Op.in]: predmeti}
       }}).then(function(listaPredmeta){
         let mapa = {}
         for(let i = 0; i < listaPredmeta.length; i++) {
@@ -144,96 +148,63 @@ app.get('/dajSveAnketePoPredmetima', function(req, res) {
     })
 })
 
-app.get('/dajSveAnketeZaKojePostojeRezultati', function(req, res) {
-  let idKorisnika = req.query.idUloga
-  if(!idKorisnika) {
-    res.json({message: "Nije poslan parametar idKorisnik"})
-    return
- }
- // let idKorisnika=3;
-  let datumTrenutni = new Date();
-
-  db.anketa.findAll().then(function(rez){
-    let istekaoRok = []
-
-         for(let i = 0; i < rez.length; i++) {
-           let pomocni=new Date(rez[i].datumIstekaAnkete);
-           if(datumTrenutni-pomocni>=0)
-           istekaoRok.push(rez[i].idAnketa)
-         }
-         if(idKorisnika==1){
+  app.get('/dajSveAnketeZaKojePostojeRezultati', function(req, res) {
+    let idKorisnik = req.query.idKorisnik
+    if(!idKorisnik) {
+      res.json({message: "Nije poslan parametar idKorisnik"})
+      return
+  }
+  db.korisnik.findOne({
+    where: {
+      id: idKorisnik
+    }
+  }).then(korisnik => {
+    let Op = db.Sequelize.Op
+      where = {
+        datumIstekaAnkete: {
+          [Op.lt]: new Date()
+        }
+      }
+      let uloge = ['', 'STUDENT', 'ASISTENT', 'PROFESOR', 'ADMIN', 'STUDENTSKA_SLUZBA']
+      if(uloge[korisnik.idUloga] != 'ADMIN') {
+        let table = db.predmet_student
+        let attributes = ['idPredmet']
+        let Where = {
+          idStudent: idKorisnik
+        }
+        if(uloge[korisnik.idUloga] != 'STUDENT') {
+          table = db.predmet
+          attributes = ['id']
+          Where = {
+            [Op.or]: {
+              idProfesor: idKorisnik,
+              idAsistent: idKorisnik
+            }
+          }
+        }
+        where[Op.or] = [{tipAnkete: 'javna anketa'}]
+        table.findAll({
+          attributes,
+          where: Where
+        }).then(predmeti => {
+          predmeti = predmeti.map(p => p[attributes[0]]).concat(-1)
+          where[Op.or].push({idPredmet: {[Op.in]: predmeti}})
           db.anketa.findAll({
-            where:{
-              tipAnkete: 'javna anketa',
-              idAnketa: {in:[istekaoRok]}
-            }}).then(function(rezultat){
-              res.json(rezultat);
-            }).catch(error => {
+            where
+          }).then(function(ankete){
+            res.json({ankete})
+          }).catch(error => {
               res.json({error})
-            })
-            //fali jos ankete za predmete na koje je student upisan
-        }
-        else if(idKorisnika==2 || idKorisnika==3){
-          db.anketa.findAll({
-            where:{
-              tipAnkete: 'javna anketa',
-              idAnketa: {in:[istekaoRok]}
-            }}).then(function(rezultat){
-              res.json(rezultat);
-            }).catch(error => {
-              res.json({error})
-            })
-            //fale one ankete za cije predmete je on profesor
-        }
-        else if(idKorisnika==4){
-        res.json(istekaoRok);
-        }
-    }).catch(error => {
-      res.json({error})
-    })
+          })  
+        })
+      }
+
     
-})
-
-app.get('/dajListuPopunjenihAnketaNaMojimPredmetima',function(req,res){
-  let idUlaz = req.query.idProfesora
-  if(!idUlaz) {
-    idUlaz = req.query.idAsistent
-  }
-  if(!idUlaz){
-    res.json({message: "Nije poslan parametar idProfesora ili idAsistenta"})
-         return
-  }
-
-  db.predmet.findAll({
-    where:{
-    [Op.or]: [{idProfesor: idUlaz}, {idAsistent: idUlaz}]
-  }}).then(function(result){
-    let predmetiLista = []
-         for(let i = 0; i < result.length; i++) {
-           predmetiLista.push(result[i].id)
-         }
-    db.anketa.findAll({
-      where:{
-        idPredmet: {[Op.in]:predmetiLista}
-      }}).then(function(rez){
-        let anketeLista = []
-         for(let i = 0; i < rez.length; i++) {
-           anketeLista.push(rez[i].idAnketa)
-         }
-         db.popunjenaAnketa.findAll({
-           where:{
-             idAnketa: {[Op.in]:anketeLista}
-           }}).then(function(rezultat){
-             res.json(rezultat)
-           }).catch(error => {
-            res.json({error})
-          })
-      }).catch(error => {
-        res.json({error})
-      })
   }).catch(error => {
     res.json({error})
   })
-})
+
+  })
+
 
 }

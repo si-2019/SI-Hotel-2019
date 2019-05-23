@@ -54,7 +54,7 @@ module.exports = function(sequelize, DataTypes) {
       field: 'opisAnkete'
     },
     datumIstekaAnkete: {
-      type: DataTypes.DATEONLY,
+      type: DataTypes.DATE,
       allowNull: true,
       field: 'datumIstekaAnkete'
     }

@@ -71,6 +71,24 @@ module.exports = function(app, con, db) {
       })
     })
 
+    app.get('/dederAnkete', (req, res) => {
+      db.predmet_student.findAll().then(rez => {
+        res.send(rez)
+      })
+    })
+
+
+    app.get('/dajMojeAnkete', (req, res) => {
+      db.anketa.findAll({
+        where: {
+          idNapravio: req.query.idNapravio
+        }
+      }).then(ankete => {
+        res.json({ankete})
+      }).catch(error => {
+        res.json({error})
+      })
+    })
     
 
 }

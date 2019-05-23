@@ -39,6 +39,9 @@ app.get('/getPredmet', function(req, res) {
         res.json({nazivPredmeta: result[0].naziv});
       })
     }
+    else {
+      res.json({message: "Anketa nije anketa za predmet"})
+    }
   })
 })
 app.get('/getDatumIstekaAnkete', function(req, res) {
