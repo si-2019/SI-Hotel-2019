@@ -203,8 +203,54 @@ module.exports = function(app, con, db) {
   }).catch(error => {
     res.json({error})
   })
-
   })
 
+  app.get('/obrisiAnketu', function(req,res){
+
+    let idAnkete = req.query.idAnketa
+    let idKorisnika = req.query.idKorisnik
+    if(!idAnkete || !idKorisnika) {
+      res.json({message: "Nije poslan jedan od parametara"})
+      return
+  }
+  db.korisnik.findOne({
+    where:{
+      id: idKorisnika
+    }
+  }).then(function (rez){
+    if(rez.idUloga==4){
+    db.anketa.destroy({
+      where:{
+        idAnketa: idAnkete
+      }
+    }).then(
+      res.json("Anketa je obrisana")
+    ).catch(error => {
+      res.json({error})
+  })
+}
+    db.anketa.findOne({
+      where:{
+        idAnketa:idAnkete,
+        idNapravio: idKorisnika
+      }
+    }).then(function (rezultat){
+           db.anketa.destroy({
+             where:{
+               idNapravio: rezultat.idNapravio,
+               idAnketa: idAnkete
+             }
+           }).then(
+             res.json("Anketa je obrisana")
+           ).catch(error => {
+            res.json({error})
+        })
+    }).catch(error => {
+      res.json({error})
+  })
+  }).catch(error => {
+    res.json({error})
+})  
+  })
 
 }
