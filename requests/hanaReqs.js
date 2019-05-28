@@ -205,7 +205,7 @@ module.exports = function(app, con, db) {
   })
   })
 
-  app.get('/obrisiAnketu', function(req,res){
+  app.post('/obrisiAnketu', function(req,res){
 
     let idAnkete = req.query.idAnketa
     let idKorisnika = req.query.idKorisnik
