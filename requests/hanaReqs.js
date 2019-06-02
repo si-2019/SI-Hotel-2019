@@ -253,4 +253,40 @@ module.exports = function(app, con, db) {
 })  
   })
 
+  app.get('/dajAnketeNaPredmetimaZaStudenta', function(req, res) {
+    let idStudenta = req.query.idStudent
+    if(!idStudenta) {
+      res.json({message: "Nije poslan parametar idStudent"})
+      return
+  }
+  db.predmet_student.findAll({
+    where: {
+      idStudent: idStudenta
+    }
+  }).then(function(rez) {
+    let predmeti = []
+         for(let i = 0; i < rez.length; i++) {
+           predmeti.push(rez[i].idPredmet)
+         }
+         let Op = db.Sequelize.Op
+         db.anketa.findAll({
+           where:{
+            datumIstekaAnkete: {
+              [Op.gt]: new Date()
+            },
+            idPredmet:{
+              [Op.in]: predmeti
+            }
+           }
+         }).then(function(result){
+          res.json(result)
+         }
+         ).catch(error => {
+          res.json({error})
+      })  
+  }).catch(error => {
+    res.json({error})
+})
+  })
+
 }
