@@ -27,8 +27,29 @@ module.exports = function(app, con, db) {
           tipAnkete: body.tipAnkete,
           idNapravio: body.idNapravio,
           napravioIme: napravio.ime + ' ' + napravio.prezime
-        }).then(() => {
-          res.json({message: "OK"})
+        }).then(anketa => {
+          if(body.pitanja) {
+            body.pitanja.forEach(pitanje => {
+                db.pitanje.create({
+                  vrstaPitanja: pitanje.vrstaPitanja,
+                  tekstPitanja: pitanje.tekstPitanja,
+                  idAnketa: anketa.idAnketa
+                }).then(Pitanje => {
+                  if(pitanje.odgovori) {
+                    pitanje.odgovori.forEach(odgovor => {
+                      db.ponudjeniOdgovor.create({
+                        idPitanja: Pitanje.idPitanja,
+                        tekstOdgovora: odgovor
+                      })
+                    })
+                  }
+                })
+            })
+            res.json({message: "OK"})
+          } 
+          else {
+            res.json({message: "OK"})
+          }
         }).catch(error => {
           res.json({error})
         })
@@ -50,6 +71,24 @@ module.exports = function(app, con, db) {
       })
     })
 
+    app.get('/dederAnkete', (req, res) => {
+      db.predmet_student.findAll().then(rez => {
+        res.send(rez)
+      })
+    })
+
+
+    app.get('/dajMojeAnkete', (req, res) => {
+      db.anketa.findAll({
+        where: {
+          idNapravio: req.query.idNapravio
+        }
+      }).then(ankete => {
+        res.json({ankete})
+      }).catch(error => {
+        res.json({error})
+      })
+    })
     
 
 }

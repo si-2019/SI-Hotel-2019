@@ -15,6 +15,7 @@ db.odgovor = sequelize.import(__dirname+'/Odgovor');
 db.popunjenaAnketa = sequelize.import(__dirname+'/PopunjenaAnketa');
 db.predmet = sequelize.import(__dirname+'/Predmet');
 db.korisnik = sequelize.import(__dirname+'/Korisnik');
+db.predmet_student = sequelize.import(__dirname + '/predmet_student')
 
 
 module.exports=db;
