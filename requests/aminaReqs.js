@@ -66,7 +66,6 @@ module.exports = function (app, con, db) {
         for (let i = 0; i < po.length; i++) {
           let obj = po[i]
           if (typeof pitanja[obj.pitanjeId] == 'undefined') {
-            console.log("aa", obj)
             pitanja[obj.pitanjeId] = {
               idPitanja: obj.pitanjeId,
               vrstaPitanja: obj.vrstaPitanja,
@@ -108,17 +107,15 @@ module.exports = function (app, con, db) {
             })
           })
         }
-        res.json({ message: "OK" })
+        res.json({ message: "OKic" })
       }).catch(error => {
-        console.log("errr", error);
-        res.json({ error })
+        console.log("errroriii", error);
+        res.json({ message: "Došlo je do greške!" })
       })
     }).catch(error => {
       console.log("errr1", error);
-      res.json({ error })
+      res.json({ message: "Došlo je do greške!" })
     })
-
-
   })
 
 }

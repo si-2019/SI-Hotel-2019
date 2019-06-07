@@ -1,6 +1,6 @@
 /* jshint indent: 2 */
 
-module.exports = function(sequelize, DataTypes) {
+module.exports = function (sequelize, DataTypes) {
   return sequelize.define('odgovor', {
     idOdgovor: {
       type: DataTypes.INTEGER(10),
@@ -29,7 +29,7 @@ module.exports = function(sequelize, DataTypes) {
     },
     idPonudjeniOdgovor: {
       type: DataTypes.INTEGER(10),
-      allowNull: false,
+      allowNull: true,
       references: {
         model: 'PonudjeniOdgovor',
         key: 'idponudjeniodgovor'
@@ -42,6 +42,6 @@ module.exports = function(sequelize, DataTypes) {
       field: 'tekstOdgovora'
     }
   }, {
-    tableName: 'Odgovor'
-  });
+      tableName: 'Odgovor'
+    });
 };
