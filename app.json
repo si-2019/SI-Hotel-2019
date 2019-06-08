@@ -1,0 +1,7 @@
+{
+  "name": "Node.js Sample",
+  "description": "A barebones Node.js app using Express 4",
+  "repository": "https://github.com/si-2019/SI-Hotel-2019",
+  "logo": "https://d2eip9sf3oo6c2.cloudfront.net/tags/images/000/000/256/full/nodejslogo.png",
+  "keywords": ["node", "express", "static"]
+}
