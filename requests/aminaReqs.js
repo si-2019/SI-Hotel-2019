@@ -104,6 +104,8 @@ module.exports = function (app, con, db) {
               idPitanje: odgovor.idPitanja,
               idPonudjeniOdgovor: odgovor.idPonudjeniOdgovor,
               tekstOdgovora: odgovor.tekstOdgovora
+            }).then(res => {
+            }).catch(error => {
             })
           })
         }

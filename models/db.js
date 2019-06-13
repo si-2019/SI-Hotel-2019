@@ -1,8 +1,9 @@
 const Sequelize = require("sequelize");
-const sequelize = new Sequelize("TYQcLL35gV","TYQcLL35gV","BLysSj9ZrP",{host:'remotemysql.com',dialect:"mysql",logging:console.log,  port: 3306,define: {
+const sequelize = new Sequelize("ohmXXciFMP","ohmXXciFMP","6xmnYQrGQK",{host:'remotemysql.com',dialect:"mysql",logging:console.log,  port: 3306,define: {
         timestamps: false
     }
 });
+
 const db = {}
 db.Sequelize = Sequelize;  
 db.sequelize = sequelize;

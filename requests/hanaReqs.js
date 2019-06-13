@@ -7,15 +7,18 @@ module.exports = function(app, con, db) {
 
    app.post('/promijeniDatumIsteka', function(req, res) {
     const body = req.body
-
-    let sql = "UPDATE Anketa SET datumIstekaAnkete = '" + body.datumIstekaAnkete + "' WHERE idAnketa = " + body.idAnketa
- 
-    con.query(sql, (err, result) => {
-      if(err) {
-        res.json({message: err})
-        return;
+    console.log(body)
+    
+    db.anketa.update({
+      datumIstekaAnkete: body.datumIstekaAnkete
+    }, {
+      where: {
+        idAnketa: body.idAnketa
       }
+    }).then(response => {
       res.json({message: "OK"})
+    }).catch(error => {
+      res.json({error})
     })
   })
 

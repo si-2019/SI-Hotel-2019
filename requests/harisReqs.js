@@ -90,5 +90,37 @@ module.exports = function(app, con, db) {
       })
     })
     
+    app.get('/dajPredmete', (req, res) => {
+      let idKorisnik = req.query.idKorisnik
+      db.predmet.findAll({
+        where: {
+          [db.Sequelize.Op.or]: {
+            idProfesor: idKorisnik,
+            idAsistent: idKorisnik
+          }
+        }
+      }).then(predmeti => {
+        res.json(predmeti)
+      }).catch(error => {
+        res.json({error})
+      })
+    })
+
+    app.get('/dajOsnovno', (req, res) => {
+      let idAnketa = req.query.idAnketa
+      db.anketa.findOne({
+        where: {
+          idAnketa
+        }
+      }).then(anketa => {
+        res.json({
+          anketa
+        }) 
+      }).catch(error => {
+        res.json({
+          error
+        })
+      })
+    })
 
 }
