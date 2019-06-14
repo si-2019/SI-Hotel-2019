@@ -123,4 +123,39 @@ module.exports = function(app, con, db) {
       })
     })
 
+    app.get('/dajPopunjenuAnketu', (req, res) => {
+      let id = req.query.id
+      con.query('SELECT * FROM PopunjenaAnketa pa, Anketa a WHERE a.idAnketa = pa.idAnketa AND pa.idPopunjenaAnketa = ' + id, (err, pa) => {
+        if(err || pa.length < 1) {
+          res.json({error: err})
+        } 
+        else {
+          con.query(`SELECT *, o.tekstOdgovora as odgovor FROM Odgovor o
+                    LEFT JOIN PonudjeniOdgovor po
+                    ON o.idPonudjeniOdgovor = po.idPonudjeniOdgovor
+                    JOIN Pitanje p
+                    ON p.idPitanja = o.idPitanje
+                    WHERE o.idPopunjenaAnketa = ${id}`,
+                    (err, odgovori) => {
+                      if(err) {
+                        res.json({error: err})
+                        return
+                      }
+                      let odg = {}
+                      for(let i = 0; i < odgovori.length; i++) {
+                        let o = odgovori[i]
+                        odg[o.idPitanja] ? odg[o.idPitanja].push(o) : odg[o.idPitanja] = [o]
+                      }
+                      let odgArray = []
+                      for(let i = 0; i < Object.keys(odg).length; i++) {
+                        odgArray.push(odg[Object.keys(odg)[i]])
+                      }
+                      pa[0].odgovori = odgArray
+                      res.json(pa[0])
+                    })
+
+        }
+      })
+    })
+
 }

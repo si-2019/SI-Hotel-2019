@@ -55,9 +55,9 @@ module.exports = function(app, con, db) {
   })
   })
 
-  app.get('/dajPopunjeneAnketeZaPredmet',function(req,res){
+  app.get('/dajPopunjeneAnkete',function(req,res){
 
-    let sql='SELECT PopunjenaAnketa.* FROM Anketa, PopunjenaAnketa WHERE Anketa.idAnketa = PopunjenaAnketa.idAnketa AND idPredmet = ' + req.query.idPredmet
+    let sql='SELECT PopunjenaAnketa.*, Anketa.* FROM Anketa, PopunjenaAnketa WHERE Anketa.idAnketa = PopunjenaAnketa.idAnketa'
   
       con.query(sql, function(error, result){
         if (error)
@@ -66,53 +66,70 @@ module.exports = function(app, con, db) {
           return;
         }
         res.json({ankete: result});
-    })
-    })
-
-    app.get('/dajAnketeZaProfesoraPoPredmetima', function(req, res) {
-      let idProfesora = req.query.idProfesora
-      if(!idProfesora) {
-         res.json({message: "Nije poslan parametar idProfesora"})
-         return
-      }
-      let sql = "SELECT * FROM Anketa WHERE tipAnkete = 'anketa za predmet' AND idNapravio = " + idProfesora
-      con.query(sql, function(error, result) {
-         if(error) {
-           res.json({message: error})
-           return
-         }
-         let predmeti = [0]
-         for(let i = 0; i < result.length; i++) {
-           predmeti.push(result[i].idPredmet)
-         }
-         con.query('SELECT id, naziv FROM Predmet WHERE id IN (' + predmeti.toString() + ')', (greska, listaPredmeta) => {
-            if(greska) {
-              res.json({message: greska})
-              return
-            }
-            let mapa = {}
-            for(let i = 0; i < listaPredmeta.length; i++) {
-              mapa[listaPredmeta[i].id] = listaPredmeta[i].naziv
-            }
-            let ankete = {}
-            for(let i = 0; i < result.length; i++) {
-              let id = result[i].idPredmet
-              if(ankete[id]) {
-                ankete[id].ankete.push(result[i])
-              }
-              else {
-                ankete[id] = {
-                  nazivPredmeta: mapa[id],
-                  ankete: [result[i]]
-                }
-              } 
-            }
-            res.json({ankete})
-         })
       })
+    })
+    app.get('/dajPopunjeneAnketeProfesor',function(req,res){
+      let idKorisnik = req.query.idKorisnik
+      let sql='SELECT PopunjenaAnketa.*, Anketa.* FROM Anketa, PopunjenaAnketa WHERE Anketa.idAnketa = PopunjenaAnketa.idAnketa' +
+          ' AND idNapravio = ' + idKorisnik
+    
+        con.query(sql, function(error, result){
+          if (error)
+          {
+            res.json({message: error});
+            return;
+          }
+          res.json({ankete: result});
+        })
+      })
+
+
+    
+
+  app.get('/dajanketezaprofesorapopredmetima', (req, res) => {
+    let id = req.query.idKorisnik
+    if(!id)
+      id = 0
+    db.sequelize.query(`SELECT *, p.naziv as nazivPredmeta
+                        FROM Predmet p
+                        JOIN Anketa a
+                        ON ((a.tipAnkete = 'anketa za sve predmete')
+                        OR (p.id = a.idPredmet AND a.tipAnkete = 'anketa za predmet'))
+                        AND (p.idAsistent = ${id} OR p.idProfesor = ${id})`)
+                .then(ankete => {
+                  ankete = ankete[0]
+                  let obj = {}
+                  for(let i = 0; i < ankete.length; i++) {
+                    let idPredmet = ankete[i].id
+                    obj[idPredmet] ? obj[idPredmet].ankete.push(ankete[i]) : obj[idPredmet] = {
+                      nazivPredmeta: ankete[i].nazivPredmeta,
+                      ankete: [ankete[i]]
+                    }
+                  }
+                  res.json({ankete: obj})
+                })
   })
 
-  app.get('/dajSveAnketePoPredmetima', function(req, res) {
+  app.get('/dajsveanketepopredmetima', (req, res) => {
+    db.sequelize.query(`SELECT *, p.naziv as nazivPredmeta
+                        FROM Predmet p
+                        JOIN Anketa a
+                        ON (a.tipAnkete = 'anketa za sve predmete')
+                        OR (p.id = a.idPredmet AND a.tipAnkete = 'anketa za predmet')`)
+                .then(ankete => {
+                  ankete = ankete[0]
+                  let obj = {}
+                  for(let i = 0; i < ankete.length; i++) {
+                    let idPredmet = ankete[i].id
+                    obj[idPredmet] ? obj[idPredmet].ankete.push(ankete[i]) : obj[idPredmet] = {
+                      nazivPredmeta: ankete[i].nazivPredmeta,
+                      ankete: [ankete[i]]
+                    }
+                  }
+                  res.json({ankete: obj})
+                })
+  })
+  app.get('/getpp', function(req, res) {
     db.anketa.findAll({ 
       where: {
         tipAnkete: 'anketa za predmet'
@@ -213,7 +230,7 @@ module.exports = function(app, con, db) {
     let idAnkete = req.query.idAnketa
     let idKorisnika = req.query.idKorisnik
     if(!idAnkete || !idKorisnika) {
-      res.json({message: "Nije poslan jedan od parametara"})
+      res.json({error: "Nije poslan jedan od parametara"})
       return
   }
   db.korisnik.findOne({
@@ -226,10 +243,10 @@ module.exports = function(app, con, db) {
       where:{
         idAnketa: idAnkete
       }
-    }).then(
-      res.json("Anketa je obrisana")
+    }).then( brojObrisanih =>
+        res.json({message: "Anketa je obrisana"})
     ).catch(error => {
-      res.json({error})
+      res.json({error: "Anketa nije obrisana"})
   })
 }
     db.anketa.findOne({
@@ -238,13 +255,17 @@ module.exports = function(app, con, db) {
         idNapravio: idKorisnika
       }
     }).then(function (rezultat){
+      if(rezultat == null) {
+        res.json({error: "Nema privilegije nad anketom"})
+        return
+      }
            db.anketa.destroy({
              where:{
                idNapravio: rezultat.idNapravio,
                idAnketa: idAnkete
              }
            }).then(
-             res.json("Anketa je obrisana")
+             res.json({message: "Anketa je obrisana"})
            ).catch(error => {
             res.json({error})
         })
