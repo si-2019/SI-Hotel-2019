@@ -1,3 +1,5 @@
+var test = require('../testToken')
+
 module.exports = function(app, con, db) {
     /* ovdje se pišu zahtjevi npr.
       app.get('/hotel', function(req, res) {
@@ -5,15 +7,14 @@ module.exports = function(app, con, db) {
       })
     */
     app.get('/hotel', function(req, res){
-      res.send('nesto bzvz')
-    })
-    
+      test(req.query.username, req.header('Authorization'), req, res, (req, res) => {
+        res.json({message: "dobro si ocm"})
+      })
+  })
 
-    function insertSQL(table, obj) {
-      return `INSERT INTO ${table}(${Object.keys(obj).toString()}) VALUES (${Object.values(obj).toString()})`
-    }
 
     app.post('/createAnketa', function(req, res) {    
+      test(req.query.username, req.header('Authorization'), req, res, (req, res) => {
       const body = req.body
       db.korisnik.findOne({ 
         where: {
@@ -58,27 +59,12 @@ module.exports = function(app, con, db) {
       })
       
     })
+  })
 
-    app.get('/dajAnkete', (req, res) => {
-      let sql = "SELECT * from Anketa"
-      con.query(sql, (err, result) => {
-        if(err) {
-          res.json({message: err})
-        }
-        else {
-          res.json({ankete: result})
-        }
-      })
-    })
-
-    app.get('/dederAnkete', (req, res) => {
-      db.predmet_student.findAll().then(rez => {
-        res.send(rez)
-      })
-    })
 
 
     app.get('/dajMojeAnkete', (req, res) => {
+      test(req.query.username, req.header('Authorization'), req, res, (req, res) => {
       db.anketa.findAll({
         where: {
           idNapravio: req.query.idNapravio
@@ -89,8 +75,9 @@ module.exports = function(app, con, db) {
         res.json({error})
       })
     })
-    
+  })
     app.get('/dajPredmete', (req, res) => {
+      test(req.query.username, req.header('Authorization'), req, res, (req, res) => {
       let idKorisnik = req.query.idKorisnik
       db.predmet.findAll({
         where: {
@@ -105,8 +92,10 @@ module.exports = function(app, con, db) {
         res.json({error})
       })
     })
+  })
 
     app.get('/dajOsnovno', (req, res) => {
+      test(req.query.username, req.header('Authorization'), req, res, (req, res) => {
       let idAnketa = req.query.idAnketa
       db.anketa.findOne({
         where: {
@@ -122,8 +111,10 @@ module.exports = function(app, con, db) {
         })
       })
     })
+  })
 
     app.get('/dajPopunjenuAnketu', (req, res) => {
+      test(req.query.username, req.header('Authorization'), req, res, (req, res) => {
       let id = req.query.id
       con.query('SELECT * FROM PopunjenaAnketa pa, Anketa a WHERE a.idAnketa = pa.idAnketa AND pa.idPopunjenaAnketa = ' + id, (err, pa) => {
         if(err || pa.length < 1) {
@@ -157,5 +148,6 @@ module.exports = function(app, con, db) {
         }
       })
     })
+  })
 
 }

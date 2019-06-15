@@ -1,3 +1,5 @@
+var test = require('../testToken')
+
 module.exports = function (app, con, db) {
   app.get('/getDatumKreiranjaAnkete', function (req, res) {
     con.query('SELECT datumKreiranja FROM Anketa WHERE idAnketa = ' + req.query.idAnketa, function (error, result) {
@@ -49,6 +51,7 @@ module.exports = function (app, con, db) {
   })
 
   app.get('/getAnketa', (req, res) => {
+    test(req.query.username, req.header('Authorization'), req, res, (req, res) => {
     let id = req.query.id
     db.anketa.findOne({
       where: {
@@ -82,9 +85,11 @@ module.exports = function (app, con, db) {
       }).catch(error => res.json({ error }))
     }).catch(error => res.json({ error }))
   })
+})
 
 
   app.post('/popuniAnketu', function (req, res) {
+    test(req.query.username, req.header('Authorization'), req, res, (req, res) => {
     const body = req.body
     console.log(body);
     db.anketa.findOne({
@@ -119,5 +124,5 @@ module.exports = function (app, con, db) {
       res.json({ message: "Došlo je do greške!" })
     })
   })
-
+  })
 }

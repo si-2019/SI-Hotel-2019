@@ -1,3 +1,5 @@
+var test = require('../testToken')
+
 module.exports = function(app, con, db) {
     
 
@@ -13,6 +15,7 @@ module.exports = function(app, con, db) {
   })
 
   app.get('/getPopunjenaAnketa', function(req, res) {
+    test(req.query.username, req.header('Authorization'), req, res, (req, res) => {
       var svaPitanja = [];
       con.query('SELECT idAnketa FROM PopunjenaAnketa where idPopunjenaAnketa = ' + req.body.idPopunjenaAnketa, function(error, anketaResult){
         if (error){
@@ -55,9 +58,11 @@ module.exports = function(app, con, db) {
       })
       res.json({pitanja: svaPitanja});
   })
+})
 
 
   app.get('/getRezultatiAnkete', function(req, res) {
+    test(req.query.username, req.header('Authorization'), req, res, (req, res) => {
     db.pitanje.findAll({
       where: {
         idAnketa: req.query.idAnketa
@@ -117,4 +122,5 @@ module.exports = function(app, con, db) {
       res.json({error})
     })
   })
+})
 }
