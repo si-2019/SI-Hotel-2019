@@ -53,37 +53,48 @@ module.exports = function (app, con, db) {
   app.get('/getAnketa', (req, res) => {
     test(req.query.username, req.header('Authorization'), req, res, (req, res) => {
     let id = req.query.id
-    db.anketa.findOne({
+    db.popunjenaAnketa.findOne({
       where: {
-        idAnketa: id
+        idAnketa: id,
+        idPopunio: req.query.idKorisnik
       }
-    }).then(anketa => {
-      db.sequelize.query(`select *, p.idPitanja as pitanjeId
-                         from Pitanje p
-                         left join PonudjeniOdgovor po
-                         on p.idPitanja = po.idPitanja
-                         where idAnketa = ${id}
-                   `).then(po => {
-        po = po[0]
-        let pitanja = {}
-        for (let i = 0; i < po.length; i++) {
-          let obj = po[i]
-          if (typeof pitanja[obj.pitanjeId] == 'undefined') {
-            pitanja[obj.pitanjeId] = {
-              idPitanja: obj.pitanjeId,
-              vrstaPitanja: obj.vrstaPitanja,
-              tekstPitanja: obj.tekstPitanja
+    }).then(popunjena => { 
+      if(popunjena != null) {
+        res.json({accessError: "Već ste popunili ovu anketu"})
+        return
+      }
+      db.anketa.findOne({
+        where: {
+          idAnketa: id
+        }
+      }).then(anketa => {
+        db.sequelize.query(`select *, p.idPitanja as pitanjeId
+                          from Pitanje p
+                          left join PonudjeniOdgovor po
+                          on p.idPitanja = po.idPitanja
+                          where idAnketa = ${id}
+                    `).then(po => {
+          po = po[0]
+          let pitanja = {}
+          for (let i = 0; i < po.length; i++) {
+            let obj = po[i]
+            if (typeof pitanja[obj.pitanjeId] == 'undefined') {
+              pitanja[obj.pitanjeId] = {
+                idPitanja: obj.pitanjeId,
+                vrstaPitanja: obj.vrstaPitanja,
+                tekstPitanja: obj.tekstPitanja
+              }
+            }
+            if (obj.tekstOdgovora != null) {
+              typeof pitanja[obj.pitanjeId].odgovori == 'undefined' ?
+                pitanja[obj.pitanjeId].odgovori = [{ id: obj.idPonudjeniOdgovor, textOdgovora: obj.tekstOdgovora }] :
+                pitanja[obj.pitanjeId].odgovori.push({ id: obj.idPonudjeniOdgovor, textOdgovora: obj.tekstOdgovora })
             }
           }
-          if (obj.tekstOdgovora != null) {
-            typeof pitanja[obj.pitanjeId].odgovori == 'undefined' ?
-              pitanja[obj.pitanjeId].odgovori = [{ id: obj.idPonudjeniOdgovor, textOdgovora: obj.tekstOdgovora }] :
-              pitanja[obj.pitanjeId].odgovori.push({ id: obj.idPonudjeniOdgovor, textOdgovora: obj.tekstOdgovora })
-          }
-        }
-        res.json(pitanja)
+          res.json(pitanja)
+        }).catch(error => res.json({ error }))
       }).catch(error => res.json({ error }))
-    }).catch(error => res.json({ error }))
+    })
   })
 })
 

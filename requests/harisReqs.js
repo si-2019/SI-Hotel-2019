@@ -27,7 +27,7 @@ module.exports = function(app, con, db) {
           idPredmet: body.idPredmet ? body.idPredmet : null,
           tipAnkete: body.tipAnkete,
           idNapravio: body.idNapravio,
-          napravioIme: napravio.ime + ' ' + napravio.prezime
+          napravioIme: req.query.username
         }).then(anketa => {
           if(body.pitanja) {
             body.pitanja.forEach(pitanje => {

@@ -74,6 +74,7 @@ module.exports = function (app, con, db) {
   app.get('/dajPopunjeneAnketeProfesor', function (req, res) {
     test(req.query.username, req.header('Authorization'), req, res, (req, res) => {
       let idKorisnik = req.query.idKorisnik
+      console.log(req.query)
       let sql = 'SELECT PopunjenaAnketa.*, Anketa.* FROM Anketa, PopunjenaAnketa WHERE Anketa.idAnketa = PopunjenaAnketa.idAnketa' +
         ' AND idNapravio = ' + idKorisnik
 
