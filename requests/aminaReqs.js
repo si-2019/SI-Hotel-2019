@@ -1,4 +1,5 @@
 var test = require('../testToken')
+var fetch = require('node-fetch')
 
 module.exports = function (app, con, db) {
   app.get('/getDatumKreiranjaAnkete', function (req, res) {
@@ -63,37 +64,39 @@ module.exports = function (app, con, db) {
         res.json({accessError: "Već ste popunili ovu anketu"})
         return
       }
-      db.anketa.findOne({
-        where: {
-          idAnketa: id
-        }
-      }).then(anketa => {
-        db.sequelize.query(`select *, p.idPitanja as pitanjeId
-                          from Pitanje p
-                          left join PonudjeniOdgovor po
-                          on p.idPitanja = po.idPitanja
-                          where idAnketa = ${id}
-                    `).then(po => {
-          po = po[0]
-          let pitanja = {}
-          for (let i = 0; i < po.length; i++) {
-            let obj = po[i]
-            if (typeof pitanja[obj.pitanjeId] == 'undefined') {
-              pitanja[obj.pitanjeId] = {
-                idPitanja: obj.pitanjeId,
-                vrstaPitanja: obj.vrstaPitanja,
-                tekstPitanja: obj.tekstPitanja
+       {
+        db.anketa.findOne({
+          where: {
+            idAnketa: id
+          }
+        }).then(anketa => {
+          db.sequelize.query(`select *, p.idPitanja as pitanjeId
+                            from Pitanje p
+                            left join PonudjeniOdgovor po
+                            on p.idPitanja = po.idPitanja
+                            where idAnketa = ${id}
+                      `).then(po => {
+            po = po[0]
+            let pitanja = {}
+            for (let i = 0; i < po.length; i++) {
+              let obj = po[i]
+              if (typeof pitanja[obj.pitanjeId] == 'undefined') {
+                pitanja[obj.pitanjeId] = {
+                  idPitanja: obj.pitanjeId,
+                  vrstaPitanja: obj.vrstaPitanja,
+                  tekstPitanja: obj.tekstPitanja
+                }
+              }
+              if (obj.tekstOdgovora != null) {
+                typeof pitanja[obj.pitanjeId].odgovori == 'undefined' ?
+                  pitanja[obj.pitanjeId].odgovori = [{ id: obj.idPonudjeniOdgovor, textOdgovora: obj.tekstOdgovora }] :
+                  pitanja[obj.pitanjeId].odgovori.push({ id: obj.idPonudjeniOdgovor, textOdgovora: obj.tekstOdgovora })
               }
             }
-            if (obj.tekstOdgovora != null) {
-              typeof pitanja[obj.pitanjeId].odgovori == 'undefined' ?
-                pitanja[obj.pitanjeId].odgovori = [{ id: obj.idPonudjeniOdgovor, textOdgovora: obj.tekstOdgovora }] :
-                pitanja[obj.pitanjeId].odgovori.push({ id: obj.idPonudjeniOdgovor, textOdgovora: obj.tekstOdgovora })
-            }
-          }
-          res.json(pitanja)
+            res.json(pitanja)
+          }).catch(error => res.json({ error }))
         }).catch(error => res.json({ error }))
-      }).catch(error => res.json({ error }))
+      }
     })
   })
 })

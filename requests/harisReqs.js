@@ -1,25 +1,37 @@
 var test = require('../testToken')
+var fetch = require('node-fetch')
+var dajUlogu = (id, username, token) => {
+  console.log(id, username, token)
+  console.log('http://si2019golf.herokuapp.com/r1/uloga/' + id + "?username=" + username)
+  return fetch('http://si2019golf.herokuapp.com/r1/uloga/' + id + "?username=" + username, {
+    method: 'get',
+    headers: {
+      'Authorization': token,
 
-module.exports = function(app, con, db) {
-    /* ovdje se pišu zahtjevi npr.
-      app.get('/hotel', function(req, res) {
-        res.send('hotel - ankete')  
-      })
-    */
-    app.get('/hotel', function(req, res){
-      test(req.query.username, req.header('Authorization'), req, res, (req, res) => {
-        res.json({message: "dobro si ocm"})
-      })
+    }
+  })
+}
+module.exports = function (app, con, db) {
+  /* ovdje se pišu zahtjevi npr.
+    app.get('/hotel', function(req, res) {
+      res.send('hotel - ankete')  
+    })
+  */
+  app.get('/hotel', function (req, res) {
+    test(req.query.username, req.header('Authorization'), req, res, (req, res) => {
+      res.json({ message: "dobro si ocm" })
+    })
   })
 
 
-    app.post('/createAnketa', function(req, res) {    
-      test(req.query.username, req.header('Authorization'), req, res, (req, res) => {
+  app.post('/createAnketa', function (req, res) {
+    test(req.query.username, req.header('Authorization'), req, res, (req, res) => {
       const body = req.body
-      db.korisnik.findOne({ 
+      db.korisnik.findOne({
         where: {
           id: body.idNapravio
-      }}).then(napravio => {
+        }
+      }).then(napravio => {
         db.anketa.create({
           datumIstekaAnkete: body.datumIstekaAnkete,
           naziv: body.naziv,
@@ -29,55 +41,55 @@ module.exports = function(app, con, db) {
           idNapravio: body.idNapravio,
           napravioIme: req.query.username
         }).then(anketa => {
-          if(body.pitanja) {
+          if (body.pitanja) {
             body.pitanja.forEach(pitanje => {
-                db.pitanje.create({
-                  vrstaPitanja: pitanje.vrstaPitanja,
-                  tekstPitanja: pitanje.tekstPitanja,
-                  idAnketa: anketa.idAnketa
-                }).then(Pitanje => {
-                  if(pitanje.odgovori) {
-                    pitanje.odgovori.forEach(odgovor => {
-                      db.ponudjeniOdgovor.create({
-                        idPitanja: Pitanje.idPitanja,
-                        tekstOdgovora: odgovor
-                      })
+              db.pitanje.create({
+                vrstaPitanja: pitanje.vrstaPitanja,
+                tekstPitanja: pitanje.tekstPitanja,
+                idAnketa: anketa.idAnketa
+              }).then(Pitanje => {
+                if (pitanje.odgovori) {
+                  pitanje.odgovori.forEach(odgovor => {
+                    db.ponudjeniOdgovor.create({
+                      idPitanja: Pitanje.idPitanja,
+                      tekstOdgovora: odgovor
                     })
-                  }
-                })
+                  })
+                }
+              })
             })
-            res.json({message: "OK"})
-          } 
+            res.json({ message: "OK" })
+          }
           else {
-            res.json({message: "OK"})
+            res.json({ message: "OK" })
           }
         }).catch(error => {
-          res.json({error})
+          res.json({ error })
         })
       }).catch(error => {
-        res.json({error})
+        res.json({ error })
       })
-      
+
     })
   })
 
 
 
-    app.get('/dajMojeAnkete', (req, res) => {
-      test(req.query.username, req.header('Authorization'), req, res, (req, res) => {
+  app.get('/dajMojeAnkete', (req, res) => {
+    test(req.query.username, req.header('Authorization'), req, res, (req, res) => {
       db.anketa.findAll({
         where: {
           idNapravio: req.query.idNapravio
         }
       }).then(ankete => {
-        res.json({ankete})
+        res.json({ ankete })
       }).catch(error => {
-        res.json({error})
+        res.json({ error })
       })
     })
   })
-    app.get('/dajPredmete', (req, res) => {
-      test(req.query.username, req.header('Authorization'), req, res, (req, res) => {
+  app.get('/dajPredmete', (req, res) => {
+    test(req.query.username, req.header('Authorization'), req, res, (req, res) => {
       let idKorisnik = req.query.idKorisnik
       db.predmet.findAll({
         where: {
@@ -89,65 +101,105 @@ module.exports = function(app, con, db) {
       }).then(predmeti => {
         res.json(predmeti)
       }).catch(error => {
-        res.json({error})
+        res.json({ error })
       })
     })
   })
 
-    app.get('/dajOsnovno', (req, res) => {
-      test(req.query.username, req.header('Authorization'), req, res, (req, res) => {
-      let idAnketa = req.query.idAnketa
-      db.anketa.findOne({
-        where: {
-          idAnketa
-        }
-      }).then(anketa => {
-        res.json({
-          anketa
-        }) 
-      }).catch(error => {
-        res.json({
-          error
+  app.get('/dajOsnovno', (req, res) => {
+    let body = req.body
+    console.log(req.query.username, req.header('Authorization'))
+    test(req.query.username, req.header('Authorization'), req, res, (req, res) => {
+      console.log("12343443431434321434321")
+      dajUlogu(req.query.idKorisnik, req.query.username, req.header('Authorization')).then(result => result.json()).then(uloga => {
+        console.log(uloga)
+        db.anketa.findOne({
+          where: {
+            idAnketa: req.query.idAnketa,
+            idNapravio: req.query.idKorisnik
+          }
+        }).then(anketa => {
+          if (uloga.uloga != "ADMIN" && anketa == null) {
+            res.json({ accessError: "Nemate pravo izmjena ove ankete" })
+            return
+          }
+
+          let idAnketa = req.query.idAnketa
+          db.anketa.findOne({
+            where: {
+              idAnketa
+            }
+          }).then(anketa => {
+            res.json({
+              anketa
+            })
+          }).catch(error => {
+            res.json({
+              error
+            })
+          })
         })
+      }).catch(error => {
+        console.log(error)
+        res.json({ error: "mati" })
       })
     })
   })
 
-    app.get('/dajPopunjenuAnketu', (req, res) => {
-      test(req.query.username, req.header('Authorization'), req, res, (req, res) => {
+  app.get('/dajPopunjenuAnketu', (req, res) => {
+    test(req.query.username, req.header('Authorization'), req, res, (req, res) => {
+      console.log("12343443431434321434321")
+      dajUlogu(req.query.idKorisnik, req.query.username, req.header('Authorization')).then(result => result.json()).then(uloga => {
+        console.log(uloga)
+        
       let id = req.query.id
       con.query('SELECT * FROM PopunjenaAnketa pa, Anketa a WHERE a.idAnketa = pa.idAnketa AND pa.idPopunjenaAnketa = ' + id, (err, pa) => {
-        if(err || pa.length < 1) {
-          res.json({error: err})
-        } 
-        else {
+        
+        if (err || pa.length < 1) {
+          res.json({ error: err })
+        }
+        db.anketa.findOne({
+          where: {
+            idAnketa: pa[0].idAnketa,
+            idNapravio: req.query.idKorisnik
+          }
+        }).then(anketa => {
+          console.log("------", anketa, "-----")
+          if (uloga.uloga != "ADMIN" && anketa == null) {
+            res.json({ accessError: "Nemate pravo pregleda ove ankete" })
+            return
+          }
+        {
+
           con.query(`SELECT *, o.tekstOdgovora as odgovor FROM Odgovor o
                     LEFT JOIN PonudjeniOdgovor po
                     ON o.idPonudjeniOdgovor = po.idPonudjeniOdgovor
                     JOIN Pitanje p
                     ON p.idPitanja = o.idPitanje
                     WHERE o.idPopunjenaAnketa = ${id}`,
-                    (err, odgovori) => {
-                      if(err) {
-                        res.json({error: err})
-                        return
-                      }
-                      let odg = {}
-                      for(let i = 0; i < odgovori.length; i++) {
-                        let o = odgovori[i]
-                        odg[o.idPitanja] ? odg[o.idPitanja].push(o) : odg[o.idPitanja] = [o]
-                      }
-                      let odgArray = []
-                      for(let i = 0; i < Object.keys(odg).length; i++) {
-                        odgArray.push(odg[Object.keys(odg)[i]])
-                      }
-                      pa[0].odgovori = odgArray
-                      res.json(pa[0])
-                    })
+            (err, odgovori) => {
+              if (err) {
+                res.json({ error: err })
+                return
+              }
+              let odg = {}
+              for (let i = 0; i < odgovori.length; i++) {
+                let o = odgovori[i]
+                odg[o.idPitanja] ? odg[o.idPitanja].push(o) : odg[o.idPitanja] = [o]
+              }
+              let odgArray = []
+              for (let i = 0; i < Object.keys(odg).length; i++) {
+                odgArray.push(odg[Object.keys(odg)[i]])
+              }
+              pa[0].odgovori = odgArray
+              res.json(pa[0])
+            })
 
         }
       })
     })
   })
+})
+})
 
 }

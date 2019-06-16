@@ -1,4 +1,13 @@
 var test = require('../testToken')
+var fetch = require("node-fetch")
+var dajUlogu = (id, username, token) => {
+  return fetch('http://si2019golf.herokuapp.com/r1/uloga/' + id + "?username=" + username , {
+            method: 'get',
+            headers: {
+                'Authorization': token
+            }
+  })
+}
 
 module.exports = function (app, con, db) {
   /* ovdje se pišu zahtjevi npr.
@@ -10,19 +19,33 @@ module.exports = function (app, con, db) {
   app.post('/promijeniDatumIsteka', function (req, res) {
     test(req.query.username, req.header('Authorization'), req, res, (req, res) => {
       const body = req.body
+      dajUlogu(req.query.id, req.query.username, req.header('Authorization')).then(res => res.json()).then(uloga => {
+      db.anketa.findOne({
+        where: {
+          idAnketa: body.idAnketa,
+          idKorisnik: req.query.idKorisnik
+        }
+      }).then(anketa => {
+      if(uloga.uloga != "ADMIN" && anketa == null) {
+        res.json({accessError: "Nemate pravo izmjena ove ankete"})
+        return
+      }
+        
       console.log(body)
 
-      db.anketa.update({
-        datumIstekaAnkete: body.datumIstekaAnkete
-      }, {
-          where: {
-            idAnketa: body.idAnketa
-          }
-        }).then(response => {
-          res.json({ message: "OK" })
-        }).catch(error => {
-          res.json({ error })
+        db.anketa.update({
+          datumIstekaAnkete: body.datumIstekaAnkete
+        }, {
+            where: {
+              idAnketa: body.idAnketa
+            }
+          }).then(response => {
+            res.json({ message: "OK" })
+          }).catch(error => {
+            res.json({ error })
+          })
         })
+      })
     })
   })
 
@@ -238,6 +261,18 @@ module.exports = function (app, con, db) {
 
   app.post('/obrisiAnketu', function (req, res) {
     test(req.query.username, req.header('Authorization'), req, res, (req, res) => {
+      dajUlogu(req.query.idKorisnik, req.query.username, req.header('Authorization')).then(result => result.json()).then(uloga => {
+        console.log(uloga, 'ocm')
+        db.anketa.findOne({
+          where: {
+            idAnketa: req.query.idAnketa,
+            idNapravio: req.query.idKorisnik
+          }
+        }).then(anketa => {
+          if (uloga.uloga != "ADMIN" && anketa == null) {
+            res.json({ accessError: "Nemate pravo izmjena ove ankete" })
+            return
+          }
       let idAnkete = req.query.idAnketa
       let idKorisnika = req.query.idKorisnik
       if (!idAnkete || !idKorisnika) {
@@ -288,6 +323,8 @@ module.exports = function (app, con, db) {
       })
     })
   })
+})
+})
 
   app.get('/dajAnketeNaPredmetimaZaStudenta', function (req, res) {
     test(req.query.username, req.header('Authorization'), req, res, (req, res) => {
