@@ -1,7 +1,9 @@
 const Sequelize = require("sequelize");
-const sequelize = new Sequelize("TYQcLL35gV","TYQcLL35gV","BLysSj9ZrP",{host:'remotemysql.com',dialect:"mysql",logging:console.log,  port: 3306,define: {
-        timestamps: false
-    }
+const sequelize =new Sequelize("TYQcLL35gV", "TYQcLL35gV", "BLysSj9ZrP", {
+  host: "mysql-3213-0.cloudclusters.net",
+  dialect: "mysql",
+  port: 10021,
+  logging: false
 });
 const db = {}
 db.Sequelize = Sequelize;  
